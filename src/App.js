@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef, forwardRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider, useQuery } from "react-query";
+import { ReactQueryDevtools } from 'react-query/devtools'
 import NewContainer from "./Components/NewContainer";
+import NewContainerRefactored from "./Components/NewContainerRefactored";
+
 
 const queryClient = new QueryClient();
 
@@ -8,6 +11,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AppRefactored />
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 };
@@ -35,10 +39,10 @@ const AppRefactored = () => {
   const loader = useRef(null);
 
   const handleObserver = (entities) => {
+    console.log("I'm here");
     const target = entities[0];
     if (target.isIntersecting) {
       setPage((page) => page + 1);
-      
     }
   };
 
@@ -51,8 +55,8 @@ const AppRefactored = () => {
       ...prevNewsNumber,
       end: prevNewsNumber.end + 50,
     }));
-    
   };
+
   useEffect(() => {
     loadMoreNews();
     if (newsNumber.end > data?.length) setMoreNews(false);
@@ -61,7 +65,7 @@ const AppRefactored = () => {
   useEffect(() => {
     console.log(loader);
     console.log("loader.current : " + loader.current);
-    var options = {
+    const options = {
       root: null,
       rootMargin: "0px",
       threshold: 1.0,
@@ -70,7 +74,10 @@ const AppRefactored = () => {
     if (loader?.current) {
       observer.observe(loader.current);
     }
-  }, []);
+    return () => {
+      if (loader.current) observer.unobserve(loader.current);
+    };
+  }, [loader]);
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Something went wrong</div>;
@@ -79,9 +86,9 @@ const AppRefactored = () => {
     <div className="container">
       <button onClick={handleClickRefetch}>Reload news refactored</button>
       <div className="list">
-        <ul style={{ minHeight: "100vh" }}>
+        <ul>
           {data?.slice(newsNumber.start, newsNumber.end).map((id) => {
-            return <NewContainer id={id} key={id} />;
+            return <NewContainerRefactored id={id} />;
           })}
         </ul>
       </div>
